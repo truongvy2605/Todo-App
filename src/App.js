@@ -1,188 +1,179 @@
-import './App.css';
-import React, { useState, useEffect } from 'react';
-import { MdDelete } from "react-icons/md";
-import { FaCheck } from "react-icons/fa6";
-import { AiOutlineEdit } from "react-icons/ai";
+import React, { useState } from 'react';
+import './styles/App.css';
+import TodoForm from './components/todoForm';
+import TodoList from './components/todoList';
+import CompletedList from './components/completedList';
+import { useLocalStorage } from './hooks/useLocalStorage';
+import { addTodo, deleteTodo, completeTodo } from './services/todoService';
 
 function App() {
+  const [todos, setTodos] = useLocalStorage('todos', []);
+  const [completedTodos, setCompletedTodos] = useLocalStorage('completedTodos', []);
   const [isCompleteScreen, setIsCompleteScreen] = useState(false);
-  const [todos, setTodos] = useState([]);
-  const [newTitle, setNewTitle] = useState("");
-  const [newDescription, setNewDescription] = useState("");
-  const [currentEdit, setCurrentEdit] = useState("");
-  const [currentEditedItem, setCurrentEditedItem] = useState("");
-  const [completedTodos, setCompletedTodos] = useState([]);
+  const [newTitle, setNewTitle] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [currentEdit, setCurrentEdit] = useState(null);
+  const [currentEditedItem, setCurrentEditedItem] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [notification, setNotification] = useState('');
+  const [titleError, setTitleError] = useState('');
+  const [descriptionError, setDescriptionError] = useState('');
 
-  const handleAddTodo = () => {
-    let newTodoItem = {
-      title: newTitle,
-      description: newDescription,
-    }
-    let updatedTodoArr = [...todos];
-    updatedTodoArr.push(newTodoItem);
-    setTodos(updatedTodoArr);
-    localStorage.setItem('todos', JSON.stringify(updatedTodoArr));
+  // Hàm hiển thị thông báo và ẩn tự động sau 2 giây
+  const showNotification = (message) => {
+    setNotification(message);
+    setTimeout(() => {
+      setNotification('');
+    }, 2000);
   };
 
-  const handleDeleteTodo = index => {
-    let updatedTodoArr = [...todos];
-    updatedTodoArr.splice(index, 1);
-    setTodos(updatedTodoArr);
-    localStorage.setItem('todos', JSON.stringify(updatedTodoArr));
-  }
 
-  const handleComplete = (index) => {
-    let now = new Date();
-    let dd = now.getDate();
-    let mm = now.getMonth() + 1;
-    let yyyy = now.getFullYear();
-    let h = now.getHours();
-    let m = now.getMinutes();
-    let s = now.getSeconds();
-    let completedOn = `${dd}/${mm}/${yyyy} ${h}:${m}:${s}`;
-
-    let filteredItem = {
-      ...todos[index],
-      completedOn: completedOn
+  // Hàm xử lý thêm todo
+  const handleAddTodo = async () => {
+     // Kiểm tra nếu title rỗng thì hiển thị lỗi
+    if (!newTitle.trim()) {
+      setTitleError('Title is required.');
+      console.log('Title Error:', titleError);
+      return;
+    } else {
+      setTitleError('');
+    }
+     // Kiểm tra nếu description rỗng thì hiển thị lỗi
+    if (!newDescription.trim()) {
+      setDescriptionError('Description is required.');
+      console.log('Description Error:', descriptionError);
+      return;
+    } else {
+      setDescriptionError('');
     }
 
-    let updatedCompletedArr = [...completedTodos];
-    updatedCompletedArr.push(filteredItem);
-    setCompletedTodos(updatedCompletedArr);
-    handleDeleteTodo(index);
-    localStorage.setItem('completedTodos', JSON.stringify(updatedCompletedArr));
-  }
+    setIsLoading(true);
+    setTimeout(() => {
+    const newTodo = { title: newTitle, description: newDescription };
+    setTodos(addTodo(todos, newTodo));
+    setNewTitle('');
+    setNewDescription('');
+    setIsLoading(false);
+    showNotification('Todo added successfully!');
+    }, 2000);
+  };
 
-  const handleDeleteCompletedTodo = (index) => {
-    let updatedCompletedArr = [...completedTodos];
-    updatedCompletedArr.splice(index, 1);
-    setCompletedTodos(updatedCompletedArr);
-    localStorage.setItem('completedTodos', JSON.stringify(updatedCompletedArr));
-  }
+  const handleDeleteTodo = async (index) => {
+    setIsLoading(true);
+    setTimeout(() => {
+    setTodos(deleteTodo(todos, index));
+    setIsLoading(false);
+    showNotification('Todo deleted successfully!');
+    }, 2000);
+    
+  };
+
+
+  // Hàm xử lý hoàn thành todo
+  const handleComplete = async (index) => {
+    setIsLoading(true);
+    setTimeout(() => {
+    const { updatedTodos, updatedCompletedTodos } = completeTodo(todos, index, completedTodos);
+    setTodos(updatedTodos);
+    setCompletedTodos(updatedCompletedTodos);
+    setIsLoading(false);
+    showNotification('Todo marked as completed!');
+  }, 2000);
+  
+  };
+
+
+  // Hàm xử lý xóa completed todo
+  const handleDeleteCompletedTodo = async (index) => {
+    setIsLoading(true);
+    setTimeout(() => {
+    const updatedCompletedTodos = deleteTodo(completedTodos, index);
+    setCompletedTodos(updatedCompletedTodos);
+    setIsLoading(false);
+    showNotification('Completed todo deleted successfully!');
+    }, 2000);
+    
+  };
 
   const handleEdit = (index, item) => {
     setCurrentEdit(index);
     setCurrentEditedItem(item);
-  }
+  };
 
   const handleUpdateTitle = (value) => {
-    setCurrentEditedItem((prev) => {
-      return {...prev, title: value}
-    })
-  }
+    setCurrentEditedItem((prev) => ({
+      ...prev,
+      title: value,
+    }));
+  };
 
   const handleUpdateDescription = (value) => {
-    setCurrentEditedItem((prev) => {
-      return {...prev, description: value}
-    })
-  }
+    setCurrentEditedItem((prev) => ({
+      ...prev,
+      description: value,
+    }));
+  };
 
-  const handleUpdateToDo = () => {
-    let updatedTodoArr = [...todos];
-    updatedTodoArr[currentEdit] = currentEditedItem;
-    setTodos(updatedTodoArr);
-    setCurrentEdit("");
-    localStorage.setItem('todos', JSON.stringify(updatedTodoArr));
-  }
-
-  useEffect(() => {
-    let savedTodos = JSON.parse(localStorage.getItem('todos'));
-    let savedCompletedTodo = JSON.parse(localStorage.getItem('completedTodos'));
-    if (savedTodos) {
-      setTodos(savedTodos);
-    }
-
-    if (savedCompletedTodo) {
-      setCompletedTodos(savedCompletedTodo);
-    }
-  }, []);
-
+  // Hàm xử lý cập nhật todo
+  const handleUpdateToDo = async () => {
+    setIsLoading(true);
+    setTimeout(() => {
+    const updatedTodos = [...todos];
+    updatedTodos[currentEdit] = currentEditedItem;
+    setTodos(updatedTodos);
+    setCurrentEdit(null);
+    setCurrentEditedItem(null);
+    setIsLoading(false);
+    showNotification('Todo updated successfully!');
+    }, 2000);
+    
+  };
 
   return (
     <div className="App">
       <h1>My Todos</h1>
-
-      <div className='todo-wrapper'>
-
-        <div className='todo-input'>
-
-          <div className='todo-input-item'>
-            <label>Title</label>
-            <input type='text' value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="What's the task title?" />
-          </div>
-
-          <div className='todo-input-item'>
-            <label>Description</label>
-            <input type='text' value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
-              placeholder="What's the task description?" />
-          </div>
-
-          <div className='todo-input-item'>
-            <button type='button' onClick={handleAddTodo}
-              className='primaryBtn'>Add Todo</button>
-          </div>
-        </div>
-
-        <div className='btn-area'>
-          <button className={`secondaryBtn ${isCompleteScreen === false && 'active'}`}
-            onClick={() => setIsCompleteScreen(false)}>Todo</button>
-          <button className={`secondaryBtn ${isCompleteScreen === true && 'active'}`}
-            onClick={() => setIsCompleteScreen(true)}>Completed</button>
-        </div>
-
-        <div className='todo-list'>
-
-          {isCompleteScreen === false && todos.map((item, index) => {
-            if (currentEdit === index) {
-              return (<div className='edit_wrapper' key={index}>
-                <input placeholder='Update Title'
-                  onChange={(e) => handleUpdateTitle(e.target.value)}
-                  value={currentEditedItem.title} />
-                <input placeholder='Update Description'
-                  onChange={(e) => handleUpdateDescription(e.target.value)}
-                  value={currentEditedItem.description} />
-                <button type='button' onClick={handleUpdateToDo}
-                  className='primaryBtn'>Update</button>
-              </div>
-              )
-            } else {
-              return (
-                <div className='todo-list-item' key={index}>
-                  <div>
-                    <h3>{item.title}</h3>
-                    <p>{item.description}</p>
-                  </div>
-
-                  <div>
-                    <MdDelete onClick={handleDeleteTodo} className='icon' title='Delete?' />
-                    <FaCheck className='check-icon' onClick={() => handleComplete(index)} title='Completed?' />
-                    <AiOutlineEdit className="check-icon" onClick={() => handleEdit(index, item)} title="Edit?" />
-                  </div>
-                </div>
-              )
-            }
-          })}
-
-          {isCompleteScreen === true && completedTodos.map((item, index) => {
-            return (
-              <div className='todo-list-item' key={index}>
-                <div>
-                  <h3>{item.title}</h3>
-                  <p>{item.description}</p>
-                  <p><smalll>completed on:  {item.completedOn}</smalll></p>
-                </div>
-
-                <div>
-                  <MdDelete onClick={handleDeleteCompletedTodo} className='icon' title='Delete?' />
-                </div>
-              </div>
-            )
-          })}
-        </div>
+      <TodoForm
+        newTitle={newTitle}
+        setNewTitle={setNewTitle}
+        newDescription={newDescription}
+        setNewDescription={setNewDescription}
+        handleAddTodo={handleAddTodo}
+        titleError={titleError}
+        descriptionError={descriptionError}
+        isLoading={isLoading.addTodo} // Truyền trạng thái loading cho form
+      />
+      <div className='btn-area'>
+        <button onClick={() => setIsCompleteScreen(false)} className={!isCompleteScreen ? 'active' : ''}>Todo</button>
+        <button onClick={() => setIsCompleteScreen(true)} className={isCompleteScreen ? 'active' : ''}>Completed</button>
       </div>
+      {isCompleteScreen ? (
+        <CompletedList completedTodos={completedTodos} handleDeleteCompletedTodo={handleDeleteCompletedTodo} />
+      ) : (
+        <TodoList
+          todos={todos}
+          handleDeleteTodo={handleDeleteTodo}
+          handleComplete={handleComplete}
+          handleEdit={handleEdit}
+          currentEdit={currentEdit}
+          setCurrentEdit={setCurrentEdit}
+          currentEditedItem={currentEditedItem}
+          setCurrentEditedItem={setCurrentEditedItem}
+          handleUpdateToDo={handleUpdateToDo}
+          handleUpdateTitle={handleUpdateTitle}
+          handleUpdateDescription={handleUpdateDescription}
+          isLoading={isLoading} // Truyền trạng thái loading cho từng hành động
+        />
+      )}
+      {isLoading && (
+        <div className="loading-indicator">
+          <div className="spinner"></div>
+        </div>
+      )}
+      {notification && (
+        <div className="notification">
+          {notification}
+        </div>
+      )}
     </div>
   );
 }
