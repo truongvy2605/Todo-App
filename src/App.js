@@ -5,6 +5,7 @@ import TodoList from './components/todoList';
 import CompletedList from './components/completedList';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { addTodo, deleteTodo, completeTodo } from './services/todoService';
+import { paginate } from './hooks/pagination';
 
 function App() {
   const [todos, setTodos] = useLocalStorage('todos', []);
@@ -18,6 +19,29 @@ function App() {
   const [notification, setNotification] = useState('');
   const [titleError, setTitleError] = useState('');
   const [descriptionError, setDescriptionError] = useState('');
+
+  // Phân trang
+  const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
+  const itemsPerPage = 4; // Số mục hiển thị mỗi trang   
+  const totalTodoPages = Math.ceil(todos.length / itemsPerPage); // Tính toán số trang
+  const currentTodos = paginate(todos, currentPage, itemsPerPage); // Lấy todos cho trang hiện tại
+  // Phân trang completed todos
+  const [completedPage, setCompletedPage] = useState(1);
+  const totalCompletedPages = Math.ceil(completedTodos.length / itemsPerPage);
+  const currentCompletedTodos = paginate(completedTodos, completedPage, itemsPerPage);
+
+  // Hàm xử lý thay đổi trang
+  const handlePageChange = (page, type) => {
+    if (type === 'todos') {
+      if (page >= 1 && page <= totalTodoPages) {
+        setCurrentPage(page);
+      }
+    } else if (type === 'completed') {
+      if (page >= 1 && page <= totalCompletedPages) {
+        setCompletedPage(page);
+      }
+    }
+  };
 
   // Hàm hiển thị thông báo và ẩn tự động sau 2 giây
   const showNotification = (message) => {
@@ -47,6 +71,7 @@ function App() {
       setDescriptionError('');
     }
 
+    // Thêm todo mới
     setIsLoading(true);
     setTimeout(() => {
     const newTodo = { title: newTitle, description: newDescription };
@@ -55,16 +80,17 @@ function App() {
     setNewDescription('');
     setIsLoading(false);
     showNotification('Todo added successfully!');
-    }, 2000);
+    }, 1000);
   };
 
+  // Hàm xử lý xóa todo
   const handleDeleteTodo = async (index) => {
     setIsLoading(true);
     setTimeout(() => {
     setTodos(deleteTodo(todos, index));
     setIsLoading(false);
     showNotification('Todo deleted successfully!');
-    }, 2000);
+    }, 1000);
     
   };
 
@@ -78,7 +104,7 @@ function App() {
     setCompletedTodos(updatedCompletedTodos);
     setIsLoading(false);
     showNotification('Todo marked as completed!');
-  }, 2000);
+  }, 1000);
   
   };
 
@@ -91,9 +117,10 @@ function App() {
     setCompletedTodos(updatedCompletedTodos);
     setIsLoading(false);
     showNotification('Completed todo deleted successfully!');
-    }, 2000);
+    }, 1000);
     
   };
+
 
   const handleEdit = (index, item) => {
     setCurrentEdit(index);
@@ -125,7 +152,7 @@ function App() {
     setCurrentEditedItem(null);
     setIsLoading(false);
     showNotification('Todo updated successfully!');
-    }, 2000);
+    }, 1000);
     
   };
 
@@ -147,10 +174,36 @@ function App() {
         <button onClick={() => setIsCompleteScreen(true)} className={isCompleteScreen ? 'active' : ''}>Completed</button>
       </div>
       {isCompleteScreen ? (
-        <CompletedList completedTodos={completedTodos} handleDeleteCompletedTodo={handleDeleteCompletedTodo} />
+        <>
+        <CompletedList completedTodos={currentCompletedTodos} handleDeleteCompletedTodo={handleDeleteCompletedTodo} />
+        <div className="pagination">
+            <button
+              onClick={() => handlePageChange(completedPage - 1, 'completed')}
+              disabled={completedPage === 1}
+            >
+              Previous
+            </button>
+            {Array.from({ length: totalCompletedPages }, (_, index) => (
+              <button
+                key={index}
+                onClick={() => handlePageChange(index + 1, 'completed')}
+                className={completedPage === index + 1 ? 'active' : ''}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => handlePageChange(completedPage + 1, 'completed')}
+              disabled={completedPage === totalCompletedPages}
+            >
+              Next
+            </button>
+          </div>
+        </>
       ) : (
+        <>
         <TodoList
-          todos={todos}
+          todos={currentTodos} // Chỉ truyền todos thuộc trang hiện tại
           handleDeleteTodo={handleDeleteTodo}
           handleComplete={handleComplete}
           handleEdit={handleEdit}
@@ -163,6 +216,32 @@ function App() {
           handleUpdateDescription={handleUpdateDescription}
           isLoading={isLoading} // Truyền trạng thái loading cho từng hành động
         />
+
+        {/*phân trang*/}
+        <div className="pagination">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            {Array.from({ length: totalTodoPages }, (_, index) => (
+              <button
+                key={index}
+                onClick={() => handlePageChange(index + 1)}
+                className={currentPage === index + 1 ? 'active' : ''}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalTodoPages}
+            >
+              Next
+            </button>
+          </div>
+          </>
       )}
       {isLoading && (
         <div className="loading-indicator">
