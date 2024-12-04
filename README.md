@@ -1,3 +1,96 @@
+Hướng dẫn cài đặt và chạy dự án
+# Clone dự án về máy
+Sử dụng lệnh dưới đây để clone dự án từ repository: 
+git clone <https://github.com/truongvy2605/Todo-App.git>
+
+Sau khi clone, di chuyển vào thư mục dự án bằng lệnh:
+cd <thư_mục_dự_án>
+
+## Cài đặt môi trường
+Đảm bảo máy tính của bạn đã cài đặt Node.js và npm. Nếu chưa, bạn có thể tải và cài đặt từ trang chủ Node.js.
+
+### Cài đặt các package cần thiết
+Chạy lệnh sau để cài đặt các thư viện cần thiết
+npm install
+
+#### Chạy dự án
+Sử dụng lệnh dưới đây để khởi chạy dự án:
+npm start
+
+Mở trình duyệt và truy cập http://localhost:3000 để xem giao diện ứng dụng.
+
+--------------------------------------------------------------------------------------------------
+# Giải thích cấu trúc dự án
+
+1. Thư mục chính
+
+`src`: Chứa toàn bộ mã nguồn của ứng dụng.
+
+`components`: Các component chính của ứng dụng.
+
+`todoForm`: Form nhập thông tin todo mới.
+
+`todoList`: Hiển thị danh sách các todo chưa hoàn thành.
+
+`completedList`: Hiển thị danh sách các todo đã hoàn thành.
+
+`hooks`:
+
+`useLocalStorage.js`: Custom hook để quản lý state với LocalStorage.
+
+`services`:
+
+`todoService`: Các hàm xử lý nghiệp vụ (thêm, xoá, hoàn thành todo).
+
+`styles`:
+
+`App.css`: Các style chính cho ứng dụng.
+
+`App.js`: File chính quản lý logic và hiển thị giao diện.
+
+--------------------------------------------------------------------------------------------------
+# Liệt kê các tính năng đã làm được
+
+1. Thêm Todo
+Cho phép người dùng nhập tiêu đề và mô tả để thêm một todo mới.
+
+2. Kiểm tra tính hợp lệ: yêu cầu tiêu đề và mô tả không được để trống.
+
+3. Hiển thị danh sách Todo
+
+4. Hiển thị danh sách các todo chưa hoàn thành.
+
+5. Xóa Todo
+
+6. Xóa một todo khỏi danh sách todo chưa hoàn thành.
+
+7. Đánh dấu hoàn thành Todo
+
+8. Chuyển todo từ danh sách chưa hoàn thành sang danh sách đã hoàn thành.
+
+9. Hiển thị danh sách Todo đã hoàn thành
+
+10. Hiển thị danh sách các todo đã hoàn thành ở màn hình riêng.
+
+11. Xóa Todo đã hoàn thành
+
+12. Xóa một todo khỏi danh sách đã hoàn thành.
+
+13. Chỉnh sửa Todo
+Cho phép cập nhật tiêu đề và mô tả của todo trong danh sách chưa hoàn thành.
+
+14. Thông báo trạng thái
+
+15. Hiển thị thông báo khi thêm, xóa, hoàn thành hoặc chỉnh sửa todo.
+
+16. Tự động lưu vào LocalStorage
+
+17. Tự động lưu trạng thái danh sách todo và danh sách đã hoàn thành vào LocalStorage.
+
+18. Hiển thị trạng thái tải (Loading)
+
+19. Hiển thị spinner khi thực hiện các thao tác như thêm, xóa, hoàn thành hoặc chỉnh sửa todo.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

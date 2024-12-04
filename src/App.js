@@ -5,7 +5,7 @@ import TodoList from './components/todoList';
 import CompletedList from './components/completedList';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { addTodo, deleteTodo, completeTodo } from './services/todoService';
-import { paginate } from './hooks/pagination';
+import { paginate } from './services/pagination';
 
 function App() {
   const [todos, setTodos] = useLocalStorage('todos', []);
@@ -22,16 +22,17 @@ function App() {
 
   // Phân trang
   const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
-  const itemsPerPage = 4; // Số mục hiển thị mỗi trang   
-  const totalTodoPages = Math.ceil(todos.length / itemsPerPage); // Tính toán số trang
-  const currentTodos = paginate(todos, currentPage, itemsPerPage); // Lấy todos cho trang hiện tại
+  const itemsPerPageTodo = 4; // Số mục hiển thị mỗi trang   
+  const totalTodoPages = Math.ceil(todos.length / itemsPerPageTodo); // Tính toán số trang
+  const currentTodos = paginate(todos, currentPage, itemsPerPageTodo); // Lấy todos cho trang hiện tại
   // Phân trang completed todos
+  const itemsPerPageCompleted = 3;
   const [completedPage, setCompletedPage] = useState(1);
-  const totalCompletedPages = Math.ceil(completedTodos.length / itemsPerPage);
-  const currentCompletedTodos = paginate(completedTodos, completedPage, itemsPerPage);
+  const totalCompletedPages = Math.ceil(completedTodos.length / itemsPerPageCompleted);
+  const currentCompletedTodos = paginate(completedTodos, completedPage, itemsPerPageCompleted);
 
   // Hàm xử lý thay đổi trang
-  const handlePageChange = (page, type) => {
+  const handlePageChange = (page, type = 'todos') => {
     if (type === 'todos') {
       if (page >= 1 && page <= totalTodoPages) {
         setCurrentPage(page);
@@ -220,7 +221,7 @@ function App() {
         {/*phân trang*/}
         <div className="pagination">
             <button
-              onClick={() => handlePageChange(currentPage - 1)}
+              onClick={() => handlePageChange(currentPage - 1, 'todos')}
               disabled={currentPage === 1}
             >
               Previous
@@ -235,7 +236,7 @@ function App() {
               </button>
             ))}
             <button
-              onClick={() => handlePageChange(currentPage + 1)}
+              onClick={() => handlePageChange(currentPage + 1, 'todos')}
               disabled={currentPage === totalTodoPages}
             >
               Next
